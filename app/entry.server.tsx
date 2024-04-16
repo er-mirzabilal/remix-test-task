@@ -1,56 +1,16 @@
-import * as React from 'react';
-import { renderToString } from 'react-dom/server';
-import { RemixServer } from 'remix';
-import type { EntryContext } from 'remix';
+import type { EntryContext } from '@remix-run/node'
+import { RemixServer } from '@remix-run/react'
+import { renderToString } from 'react-dom/server'
 
-import createEmotionCache from './src/createEmotionCache';
-import theme from './src/theme';
-import StylesContext from './src/StylesContext';
+export const handleRequest = (request: Request, responseStatusCode: number, responseHeaders: Headers, remixContext: EntryContext) => {
+	const markup = renderToString(<RemixServer context={remixContext} url={request.url} />)
 
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider } from '@mui/material/styles';
-import { CacheProvider } from '@emotion/react';
-import createEmotionServer from '@emotion/server/create-instance';
+	responseHeaders.set('Content-Type', 'text/html')
 
-export default function handleRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  remixContext: EntryContext,
-) {
-  const cache = createEmotionCache();
-  const { extractCriticalToChunks } = createEmotionServer(cache);
-
-  const MuiRemixServer = () => (
-    <CacheProvider value={cache}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <RemixServer context={remixContext} url={request.url} />
-      </ThemeProvider>
-    </CacheProvider>
-  );
-
-  // Render the component to a string.
-  const html = renderToString(
-    <StylesContext.Provider value={null}>
-      <MuiRemixServer />
-    </StylesContext.Provider>,
-  );
-
-  // Grab the CSS from emotion
-  const emotionChunks = extractCriticalToChunks(html);
-
-  // Re-render including the extracted css.
-  const markup = renderToString(
-    <StylesContext.Provider value={emotionChunks.styles}>
-      <MuiRemixServer />
-    </StylesContext.Provider>,
-  );
-
-  responseHeaders.set('Content-Type', 'text/html');
-
-  return new Response(`<!DOCTYPE html>${markup}`, {
-    status: responseStatusCode,
-    headers: responseHeaders,
-  });
+	return new Response('<!DOCTYPE html>' + markup, {
+		headers: responseHeaders,
+		status: responseStatusCode,
+	})
 }
+
+export default handleRequest
