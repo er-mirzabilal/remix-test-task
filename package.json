@@ -27,8 +27,5 @@
     "@types/react-dom": "latest",
     "typescript": "latest"
   },
-  "engines": {
-    "node": ">=14"
-  },
   "sideEffects": false
 }
